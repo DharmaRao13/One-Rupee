@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1b1e2a"/>
+      <stop offset="100%" stop-color="#11131c"/>
+    </radialGradient>
+    <radialGradient id="face" cx="36%" cy="28%" r="68%" fx="36%" fy="28%">
+      <stop offset="0%"   stop-color="#FFF5AA"/>
+      <stop offset="20%"  stop-color="#FFD700"/>
+      <stop offset="60%"  stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#A0620A"/>
+    </radialGradient>
+    <radialGradient id="edge" cx="50%" cy="50%" r="50%">
+      <stop offset="70%"  stop-color="#B8730A" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#7A4A00" stop-opacity="0.85"/>
+    </radialGradient>
+    <radialGradient id="shine" cx="30%" cy="22%" r="40%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-15%" width="140%" height="145%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#6B3C00" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <!-- Dark background square -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- Coin body -->
+  <circle cx="32" cy="31" r="26" fill="url(#face)" filter="url(#shadow)"/>
+  <!-- Rim darkening -->
+  <circle cx="32" cy="31" r="26" fill="url(#edge)"/>
+  <!-- Inner engraved ring -->
+  <circle cx="32" cy="31" r="20.5" fill="none" stroke="#C8860A" stroke-width="1" stroke-opacity="0.65"/>
+  <!-- Specular shimmer -->
+  <circle cx="32" cy="31" r="26" fill="url(#shine)"/>
+
+  <!-- ₹ symbol -->
+  <text x="32" y="36" text-anchor="middle"
+        font-family="Georgia, serif" font-weight="700" font-size="22"
+        fill="#6B3C00" letter-spacing="-0.5">&#8377;</text>
+</svg>

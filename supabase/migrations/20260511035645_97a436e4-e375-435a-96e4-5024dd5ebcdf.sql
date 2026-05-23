@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.increment_total_payers() FROM PUBLIC, anon, authenticated;
