@@ -1,16 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-
 async function callFn<T>(name: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${FN_BASE}/${name}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
+  const { data, error } = await supabase.functions.invoke(name, {
+    body,
   });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.error || `Request failed (${res.status})`);
-  return json as T;
+  if (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    throw new Error(errMsg || "Request failed");
+  }
+  return data as T;
 }
 
 export type RazorpayMode = "live" | "test";

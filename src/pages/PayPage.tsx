@@ -98,10 +98,10 @@ const PayPage = () => {
         key: order.key_id,
         amount: order.amount,
         currency: order.currency,
-        name: "The ₹1 Quest",
+        name: "BHUPATI DARMARAO (Dharma Rao Bhupathi Pvt Ltd)",
         description: finalRupees === 1 ? "Join the wall — ₹1" : `Support the quest — ₹${finalRupees}`,
         order_id: order.order_id,
-        theme: { color: "#58CC02" },
+        theme: { color: "#58CC02", backdrop_color: "#11131c" },
         prefill: {},
         modal: {
           ondismiss: () => {

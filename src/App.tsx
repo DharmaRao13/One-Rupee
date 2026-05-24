@@ -10,6 +10,7 @@ import PayPage from "./pages/PayPage";
 import RegisterPage from "./pages/RegisterPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import UpgradePage from "./pages/UpgradePage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
@@ -42,6 +43,7 @@ const AnimatedRoutes = () => {
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<HomePage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/pay" element={<RequireAuth><PayPage /></RequireAuth>} />
           <Route path="/register" element={<RequirePayment><RegisterPage /></RequirePayment>} />
           <Route path="/leaderboard" element={<RequireRegistered><LeaderboardPage /></RequireRegistered>} />
