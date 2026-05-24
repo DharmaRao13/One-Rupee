@@ -24,6 +24,17 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
+    // Fetch the order amount to log correctly
+    const { data: orderData } = await supabase
+      .from("orders")
+      .select("amount")
+      .eq("order_id", razorpay_order_id)
+      .maybeSingle();
+
+    const amountPaise = orderData?.amount ?? 100;
+    const amountINR = amountPaise / 100;
+    const isPremium = amountINR >= 51;
+
     const expected = createHmac("sha256", KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
@@ -32,8 +43,8 @@ serve(async (req) => {
       await supabase.from("payment_logs").insert({
         razorpay_payment_id,
         status: "failed",
-        amount: 1,
-        tier: "standard",
+        amount: amountINR,
+        tier: isPremium ? "premium" : "standard",
       });
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 400,
@@ -74,8 +85,8 @@ serve(async (req) => {
       await supabase.from("payment_logs").insert({
         razorpay_payment_id,
         status: "success",
-        amount: 1,
-        tier: "standard",
+        amount: amountINR,
+        tier: isPremium ? "premium" : "standard",
       });
     }
 

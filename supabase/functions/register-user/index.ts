@@ -60,6 +60,21 @@ serve(async (req) => {
     const rank = (totalBefore ?? 0) + 1;
     const referral_code = genReferral();
 
+    // Fetch actual paid amount from orders using verified_sessions order_id
+    let amountPaid = 1;
+    let isPremium = false;
+    if (sess && sess.order_id) {
+      const { data: ord } = await supabase
+        .from("orders")
+        .select("amount")
+        .eq("order_id", sess.order_id)
+        .maybeSingle();
+      if (ord) {
+        amountPaid = ord.amount / 100;
+        isPremium = amountPaid >= 51;
+      }
+    }
+
     const { data: user, error: userErr } = await supabase
       .from("users_ledger")
       .insert({
@@ -67,11 +82,11 @@ serve(async (req) => {
         razorpay_payment_id: session_token,
         payment_id: session_token,
         is_verified: true,
-        amount_paid: 1,
-        tier: "standard",
+        amount_paid: amountPaid,
+        tier: isPremium ? "premium" : "standard",
         referral_code,
         referred_by: referred_by || null,
-        badges: computeBadges(rank, 0, false),
+        badges: computeBadges(rank, 0, isPremium),
       })
       .select()
       .single();

@@ -16,34 +16,10 @@ import { useAuth } from "@/lib/auth";
 import { useSound } from "@/lib/sound";
 import { getSS, SS } from "@/lib/session";
 
-/* ─── Guide messages per auth state ─────────────────────────────────────── */
-type GuideStep = { emoji: string; headline: string; sub: string; cta: string; ctaPath: string; color: string };
-
-const getGuideSteps = (session: boolean, hasPaid: boolean, isAdmin: boolean): GuideStep[] => {
-  if (isAdmin) return [
-    { emoji: "🛡️", headline: "Admin mode active", sub: "You have full access to the dashboard.", cta: "Open Dashboard", ctaPath: "/admin", color: "text-gold" },
-  ];
-  if (!session) return [
-    { emoji: "👋", headline: "Welcome, stranger!", sub: "Create a free account to begin your quest.", cta: "Login / Sign up", ctaPath: "/auth?next=/pay", color: "text-accent" },
-    { emoji: "🌟", headline: "It costs just ₹1", sub: "One rupee. That's all. Forever on the wall.", cta: "See the Wall", ctaPath: "/#wall-preview", color: "text-gold" },
-    { emoji: "🚀", headline: "Earn XP & climb", sub: "Refer friends, unlock badges, dominate the board.", cta: "Get Started", ctaPath: "/auth", color: "text-primary" },
-  ];
-  if (!hasPaid) return [
-    { emoji: "💸", headline: "You're logged in!", sub: "Now pay ₹1 to unlock the wall forever.", cta: "Pay ₹1 Now", ctaPath: "/pay", color: "text-primary" },
-    { emoji: "🔓", headline: "Almost there…", sub: "One tap payment via UPI, card or wallet.", cta: "Complete Quest", ctaPath: "/pay", color: "text-accent" },
-  ];
-  return [
-    { emoji: "🏆", headline: "You're a Legend!", sub: "You're on the wall. Refer friends for bonus XP.", cta: "View the Wall", ctaPath: "/leaderboard", color: "text-gold" },
-    { emoji: "⚡", headline: "Earn more XP", sub: "Share your referral link and climb the ranks.", cta: "Leaderboard", ctaPath: "/leaderboard", color: "text-primary" },
-  ];
-};
-
-/* ─── Interactive Owl + Guide Panel ─────────────────────────────────────── */
-const InteractiveOwl = ({
-  session, hasPaid, isAdmin,
-}: { session: boolean; hasPaid: boolean; isAdmin: boolean }) => {
-  const navigate = useNavigate();
+/* ─── Interactive Owl + Premium Card ─────────────────────────────────────── */
+const InteractiveOwl = () => {
   const owlRef = useRef<HTMLDivElement>(null);
+  const { play } = useSound();
 
   // Spring-physics mouse tracking
   const rawX = useRef(0);
@@ -67,11 +43,7 @@ const InteractiveOwl = ({
     return () => window.removeEventListener("mousemove", onMove);
   }, [springX, springY]);
 
-  // Guide messages
-  const steps = getGuideSteps(session, hasPaid, isAdmin);
-  const [msgIdx, setMsgIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
-  // Fixed pixel position for the Hakuna Matata portal bubble
   const [bubblePos, setBubblePos] = useState<{ x: number; y: number } | null>(null);
 
   const handleMouseEnter = useCallback(() => {
@@ -87,34 +59,17 @@ const InteractiveOwl = ({
     setBubblePos(null);
   }, []);
 
-  // Cycle guide messages every 3.5s (pause on hover)
-  useEffect(() => {
-    if (hovered || steps.length <= 1) return;
-    const id = setInterval(() => setMsgIdx((i) => (i + 1) % steps.length), 3500);
-    return () => clearInterval(id);
-  }, [hovered, steps.length]);
-
-  const current = steps[msgIdx];
-
-  const handleCta = useCallback(() => {
-    if (current.ctaPath.startsWith("/#")) {
-      document.getElementById(current.ctaPath.replace("/#", ""))?.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else {
-      navigate(current.ctaPath);
-    }
-  }, [current, navigate]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 px-2"
+      className="w-full flex flex-col items-center px-2"
     >
-      {/* ── Owl ── */}
+      {/* ── Owl (sits on top of card) ── */}
       <div
         ref={owlRef}
-        className="relative flex-shrink-0"
+        className="relative flex-shrink-0 z-10 -mb-4"
         style={{ perspective: "600px" }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -177,71 +132,59 @@ const InteractiveOwl = ({
         )}
       </div>
 
-      {/* ── Guide Panel ── */}
-      <AnimatePresence mode="wait">
+      {/* ── Premium Card (below the owl) ── */}
+      <div className="duo-card relative w-full max-w-sm sm:max-w-md overflow-hidden pt-8 pb-5 px-5 sm:px-6 transition-all duration-350 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(88,204,2,0.18)] hover:border-primary/40">
+        {/* Animated background glow */}
         <motion.div
-          key={msgIdx}
-          initial={{ opacity: 0, x: 24, scale: 0.96 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: -20, scale: 0.96 }}
-          transition={{ type: "spring", stiffness: 260, damping: 26 }}
-          className="duo-card flex flex-col gap-3 max-w-xs w-full text-left relative overflow-hidden"
-        >
-          {/* Animated background glow */}
-          <motion.div
-            animate={{ opacity: [0.08, 0.18, 0.08] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className="absolute inset-0 bg-primary rounded-2xl pointer-events-none"
-          />
+          animate={{ opacity: [0.06, 0.14, 0.06] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          className="absolute inset-0 bg-primary rounded-2xl pointer-events-none"
+        />
 
-          <div className="relative z-10 flex flex-col gap-3">
-            {/* Emoji + step dots */}
-            <div className="flex items-start justify-between">
-              <motion.span
-                animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                className="text-3xl select-none"
-              >
-                {current.emoji}
-              </motion.span>
-              {/* Dot indicators */}
-              {steps.length > 1 && (
-                <div className="flex gap-1.5 mt-1">
-                  {steps.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setMsgIdx(i)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === msgIdx ? "w-4 bg-primary" : "w-1.5 bg-border"
-                      }`}
-                      aria-label={`Guide step ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <p className={`font-display text-lg md:text-xl leading-snug ${current.color}`}>
-                {current.headline}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                {current.sub}
-              </p>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleCta}
-              className="duo-btn duo-btn-primary w-full text-sm py-2.5 mt-1"
+        <div className="relative z-10 flex flex-col gap-3">
+          {/* Gold Star top-left + Window dots top-right */}
+          <div className="flex items-start justify-between">
+            <motion.span
+              animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+              className="text-3xl select-none"
             >
-              {current.cta}
-              <ArrowRight className="h-4 w-4" />
-            </motion.button>
+              ⭐
+            </motion.span>
+            <div className="flex gap-1.5 mt-1">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+              <span className="h-2.5 w-2.5 rounded-full bg-border" />
+              <span className="h-2.5 w-2.5 rounded-full bg-border" />
+            </div>
           </div>
-        </motion.div>
-      </AnimatePresence>
+
+          {/* Main heading */}
+          <h2 className="font-display text-2xl sm:text-[1.85rem] leading-snug text-foreground tracking-tight select-none">
+            Pay <span className="relative inline-block px-2.5 py-0.5 mx-1.5 bg-primary/20 text-primary rounded-xl border border-primary/30 shadow-[0_0_15px_rgba(88,204,2,0.25)] font-black">₹1</span> to see
+            <br />
+            who paid <span className="relative inline-block px-2.5 py-0.5 mx-1.5 bg-accent/20 text-accent rounded-xl border border-accent/30 shadow-[0_0_15px_rgba(28,176,246,0.25)] font-black">₹1</span>
+          </h2>
+
+          {/* Subtext */}
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            One rupee. That's all. Forever on the wall.
+          </p>
+
+          {/* SEE THE WALL button */}
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              play("click");
+              document.getElementById("wall-preview")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+            className="duo-btn duo-btn-primary w-full text-sm py-3 mt-1 font-black uppercase tracking-wider"
+          >
+            SEE THE WALL
+            <ArrowRight className="h-4 w-4" />
+          </motion.button>
+        </div>
+      </div>
     </motion.div>
   );
 };
@@ -293,11 +236,7 @@ const HomePage = () => {
       >
         <div className="flex flex-col items-center text-center gap-6">
           {/* Interactive owl + guide panel — the centrepiece */}
-          <InteractiveOwl
-            session={!!session}
-            hasPaid={hasPaid}
-            isAdmin={isAdmin}
-          />
+          <InteractiveOwl />
 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
